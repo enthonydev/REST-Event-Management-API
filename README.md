@@ -180,24 +180,13 @@ O contrato OpenAPI está em [`docs/openapi.yaml`](docs/openapi.yaml). Ele serve 
 4. Expandir a documentação de exemplos e respostas de erro.
 5. Preparar uma configuração de demonstração com dados fictícios.
 
-## Resultado da revisão técnica
+## Limitações atuais
 
-Revisei o projeto comparando o comportamento real da aplicação com o modelo de domínio, o schema Prisma, os testes e a documentação. O projeto está adequado para estudo e demonstração local, mas ainda tem limites que precisam ser conhecidos antes de tratá-lo como uma API de produção:
+Esta primeira versão foi feita para estudo e demonstração local. O runtime ainda utiliza `Map` em memória, então os dados são perdidos quando o servidor reinicia.
 
-- O runtime usa `Map` em memória. Os dados desaparecem quando o processo reinicia, mesmo que o schema PostgreSQL já esteja definido.
-- O arquivo `prisma/seed.ts` ainda não usa o Prisma Client. Por isso, o script de seed não cria registros de verdade.
-- A especificação OpenAPI documenta as rotas principais, mas ainda não cobre todos os endpoints de produtos, itens e cancelamento de pedidos.
-- A lógica ainda está concentrada em `src/app.ts`. Para crescer sem ficar difícil de manter, seria melhor separar rotas, validações, serviços e repositórios.
-- A alteração de estoque acontece antes de terminar toda a operação do pedido. Sem uma transação, uma falha inesperada pode deixar o estoque reduzido e o pedido incompleto.
-- O cancelamento do pedido muda o status, mas ainda não devolve ao estoque ou à disponibilidade os itens que já foram reservados.
-- `Event.capacity` existe no modelo, mas ainda não limita automaticamente a soma dos ingressos vendidos.
-- Os valores monetários usam `number` no runtime. Em uma versão persistida, é mais seguro usar `Decimal` do Prisma ou trabalhar com centavos inteiros.
-- As rotas de criação e alteração de eventos, ingressos e produtos ainda não exigem autenticação ou verificam um papel de administrador.
-- O `requestId` é criado, mas ainda não é devolvido no response nem aparece em logs estruturados.
-- Existe um segredo JWT padrão para facilitar o desenvolvimento local. Em produção, a aplicação deveria falhar ao iniciar quando `JWT_SECRET` não estiver configurado.
-- Os testes usam o mesmo store em memória. O ideal é criar um store novo por teste ou limpar explicitamente os dados entre os casos.
+O schema do Prisma e do PostgreSQL já está preparado, mas as operações atuais ainda não foram migradas para o banco. Em uma próxima versão, eu conectaria a aplicação ao PostgreSQL, adicionaria transações para controlar estoque e separaria melhor rotas, serviços e repositórios.
 
-Esses pontos não foram escondidos na documentação porque fazem parte do estado atual do projeto. Eles também definem uma ordem razoável para as próximas melhorias.
+Também seria necessário adicionar autorização administrativa, ampliar a cobertura do OpenAPI e criar testes de integração usando o banco real antes de considerar o projeto pronto para produção.
 
 ## Minha experiência com o projeto
 
@@ -215,5 +204,11 @@ Essa revisão também me ajudou a separar “o código compila” de “o sistem
 
 ## Referências
 
-[1]: https://spec.openapis.org/oas/v3.0.3 "OpenAPI Specification 3.0.3"
-[2]: https://www.prisma.io/docs/orm "Prisma ORM Documentation"
+- [Node.js Documentation](https://nodejs.org/docs/latest/api/)
+- [Express Documentation](https://expressjs.com/)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [Zod Documentation](https://zod.dev/)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [Vitest Documentation](https://vitest.dev/guide/)
+- [OpenAPI Specification](https://spec.openapis.org/oas/v3.0.3)
+- [JSON Web Tokens](https://jwt.io/introduction)
