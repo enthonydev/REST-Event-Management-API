@@ -10,14 +10,25 @@ O escopo atual não inclui pagamento, notificações, QR Code operacional ou int
 
 ## Stack
 
-- Node.js
-- TypeScript com modo estrito
-- Express
-- Zod
-- JWT e bcrypt
-- PostgreSQL e Prisma, com schema preparado em `prisma/schema.prisma`
-- Vitest e Supertest
-- OpenAPI
+| Camada | Tecnologia | Uso no projeto |
+|---|---|---|
+| Runtime | Node.js 22 | Executa o servidor e os scripts de desenvolvimento. |
+| Linguagem | TypeScript 5.6, modo estrito | Tipagem do backend e verificação antes da execução. |
+| HTTP | Express 4 | Rotas, middlewares, respostas e arquivos estáticos. |
+| Segurança HTTP | Helmet e CORS | Cabeçalhos de segurança e configuração de origem. |
+| Configuração | dotenv e `.env` | Leitura de `PORT`, `JWT_SECRET`, `CORS_ORIGIN` e `DATABASE_URL`. |
+| Validação | Zod | Validação de body, parâmetros, datas, preços, quantidades e credenciais. |
+| Autenticação | JSON Web Token (JWT) | Identificação do usuário nas rotas de pedidos. |
+| Senhas | bcryptjs | Hash e comparação de senhas sem armazenar texto puro. |
+| Persistência planejada | PostgreSQL + Prisma 5.22 | Schema relacional, enums, relacionamentos, índices e geração do client. O runtime atual ainda usa `Map` em memória. |
+| Frontend | HTML, CSS e JavaScript nativos | Painel em `/ui` para testar CRUD, login, pedidos e filtros. |
+| Testes | Vitest 2 + Supertest | Testes HTTP e de regras principais. |
+| Contrato | OpenAPI 3.0.3 em YAML | Documentação das rotas e dos schemas principais. |
+| Qualidade | TypeScript check, build e `git diff --check` | Verificações executadas antes dos commits. |
+| CI | GitHub Actions | Executa instalação, check, testes e build. |
+| Versionamento | Git e GitHub | Histórico de commits e publicação do projeto. |
+
+O projeto usa **npm** como gerenciador de pacotes. Os comandos e o `package-lock.json` seguem esse padrão.
 
 ## Organização do código
 
@@ -107,6 +118,7 @@ curl -X POST http://localhost:3000/api/v1/events \
   -H 'Content-Type: application/json' \
   -d '{
     "title": "Festival Demo",
+    "category": "Música",
     "date": "2026-10-20T20:00:00Z",
     "location": "São Paulo",
     "capacity": 500
@@ -153,6 +165,8 @@ npm run db:seed
 ```
 
 O servidor deste marco ainda utiliza o store em memória. A próxima mudança estrutural é conectar as operações de pedidos ao Prisma usando transações e atualização protegida de estoque e disponibilidade. O comando `npm run db:seed` ainda é demonstrativo: ele imprime um usuário fictício e não grava dados no banco.
+
+O painel visual fica em `http://localhost:3000/ui/`. Nele é possível criar eventos, escolher uma categoria, filtrar por categoria ou por intervalo de datas, cadastrar ingressos e produtos, criar uma conta e testar pedidos.
 
 ## Documentação da API
 
