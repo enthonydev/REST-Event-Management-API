@@ -1,2 +1,2 @@
 # REST-Event-Management-API
-projeto faculdade
+projeto REST
