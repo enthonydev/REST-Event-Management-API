@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Management API — Painel</title>
+    <link rel="stylesheet" href="/ui/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div><h1>Event Management API</h1><p>Painel simples para testar os recursos da API.</p><span class="signature">Feito por Enthony Guilherme Silva</span></div>
+      <div class="status-pill"><span class="status-dot"></span><span id="api-status">Verificando API...</span></div>
+    </header>
+    <main class="layout">
+      <aside class="sidebar">
+        <nav>
+          <button class="nav-button active" data-section="dashboard">Visão geral</button>
+          <button class="nav-button" data-section="events">Eventos</button>
+          <button class="nav-button" data-section="orders">Pedidos</button>
+          <button class="nav-button" data-section="auth">Login e cadastro</button>
+        </nav>
+        <div class="session-card"><span class="eyebrow">SESSÃO</span><strong id="session-label">Visitante</strong><button id="logout-button" class="link-button hidden">Sair</button></div>
+      </aside>
+      <section class="content">
+        <div id="flash" class="flash hidden"></div>
+        <section id="dashboard" class="view active-view">
+          <div class="section-heading"><div><span class="eyebrow">PAINEL</span><h2>O que está acontecendo</h2></div><button class="primary" data-section-link="events">Novo evento</button></div>
+          <div class="stats"><article><span>Eventos cadastrados</span><strong id="stat-events">—</strong></article><article><span>Eventos ativos</span><strong id="stat-active">—</strong></article><article><span>Pedidos na sessão</span><strong id="stat-orders">—</strong></article></div>
+          <div class="panel intro"><span class="eyebrow">COMO USAR</span><h3>Comece criando um evento</h3><p>Depois, selecione o evento para cadastrar ingressos e produtos. Para testar pedidos, faça um cadastro ou login e adicione itens disponíveis.</p><button class="secondary" data-section-link="events">Abrir eventos</button></div>
+        </section>
+        <section id="events" class="view">
+          <div class="section-heading"><div><span class="eyebrow">CATÁLOGO</span><h2>Eventos</h2></div><button id="refresh-events" class="secondary">Atualizar</button></div>
+          <div class="two-col"><form id="event-form" class="panel form-card"><span class="eyebrow">NOVO EVENTO</span><h3>Adicionar evento</h3><label>Título<input name="title" required minlength="3" placeholder="Festival de verão" /></label><label>Data<input name="date" type="datetime-local" required /></label><label>Local<input name="location" required placeholder="São Paulo" /></label><label>Capacidade<input name="capacity" type="number" min="1" required placeholder="500" /></label><label>Descrição<textarea name="description" rows="3" placeholder="Opcional"></textarea></label><button class="primary" type="submit">Criar evento</button></form><div id="events-list" class="cards-list"><div class="loading">Carregando eventos...</div></div></div>
+          <div id="event-detail" class="panel detail hidden"></div>
+        </section>
+        <section id="orders" class="view"><div class="section-heading"><div><span class="eyebrow">VENDAS</span><h2>Pedidos</h2></div><button id="refresh-orders" class="secondary">Atualizar</button></div><div id="orders-guest" class="panel empty-state">Faça login para consultar seus pedidos.</div><div id="orders-content" class="hidden"><div id="orders-list" class="cards-list"></div><div id="order-builder" class="panel hidden"></div></div></section>
+        <section id="auth" class="view"><div class="section-heading"><div><span class="eyebrow">IDENTIDADE</span><h2>Login e cadastro</h2></div></div><div class="two-col auth-grid"><form id="login-form" class="panel form-card"><span class="eyebrow">ENTRAR</span><h3>Já tenho uma conta</h3><label>E-mail<input name="email" type="email" required /></label><label>Senha<input name="password" type="password" required /></label><button class="primary" type="submit">Entrar</button></form><form id="register-form" class="panel form-card"><span class="eyebrow">PRIMEIRO ACESSO</span><h3>Criar conta</h3><label>Nome<input name="name" required minlength="2" /></label><label>E-mail<input name="email" type="email" required /></label><label>Senha<input name="password" type="password" minlength="8" required /></label><button class="secondary" type="submit">Cadastrar</button></form></div></section>
+      </section>
+    </main>
+    <footer class="footer">Feito por Enthony Guilherme Silva</footer>
+    <script src="/ui/app.js" type="module"></script>
+  </body>
+</html>

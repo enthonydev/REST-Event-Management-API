@@ -53,6 +53,7 @@ router.get('/', (_req, res) => res.json({
   message: 'API REST de gerenciamento de eventos',
   health: '/health',
   events: '/api/v1/events',
+  ui: '/ui',
   openapi: '/docs/openapi.yaml'
 }));
 router.get('/health', (_req, res) => res.json({ status: 'ok', service: 'event-management-api' }));
@@ -79,6 +80,7 @@ router.post('/api/v1/orders/:id/cancel', auth, (req: AuthRequest, res) => { cons
 export const app = express();
 app.use(helmet()); app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true })); app.use(express.json({ limit: '100kb' }));
 app.use((req, _res, next) => { const requestId = req.header('x-request-id') ?? randomUUID(); req.headers['x-request-id'] = requestId; next(); });
+app.use('/ui', express.static('public'));
 app.use('/docs', express.static('docs'));
 app.use(router);
 app.use((_req, _res, next) => next(error(404, 'ROUTE_NOT_FOUND', 'Rota não encontrada')));
