@@ -166,7 +166,7 @@ npm run db:seed
 
 O servidor deste marco ainda utiliza o store em memória. A próxima mudança estrutural é conectar as operações de pedidos ao Prisma usando transações e atualização protegida de estoque e disponibilidade. O comando `npm run db:seed` ainda é demonstrativo: ele imprime um usuário fictício e não grava dados no banco.
 
-O painel visual fica em `http://localhost:3000/ui/`. Nele é possível criar eventos, escolher uma categoria, filtrar por categoria ou por intervalo de datas, cadastrar ingressos e produtos, criar uma conta e testar pedidos.
+O painel visual fica em `http://localhost:3000/ui/`. Nele é possível criar eventos, escolher uma categoria, filtrar por categoria ou por intervalo de datas, cadastrar ingressos e produtos, criar uma conta e testar pedidos. Ao criar um pedido, o painel exibe o UUID completo e oferece um botão para copiá-lo; os ingressos e produtos disponíveis aparecem em uma seleção, evitando a necessidade de procurar IDs manualmente. Também é possível buscar um pedido colando seu UUID completo.
 
 ## Documentação da API
 
