@@ -147,7 +147,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-O servidor deste marco ainda utiliza o store em memória. A próxima mudança estrutural é conectar as operações de pedidos ao Prisma usando transações e atualização protegida de estoque e disponibilidade.
+O servidor deste marco ainda utiliza o store em memória. A próxima mudança estrutural é conectar as operações de pedidos ao Prisma usando transações e atualização protegida de estoque e disponibilidade. O comando `npm run db:seed` ainda é demonstrativo: ele imprime um usuário fictício e não grava dados no banco.
 
 ## Documentação da API
 
@@ -160,6 +160,39 @@ O contrato OpenAPI está em [`docs/openapi.yaml`](docs/openapi.yaml). Ele serve 
 3. Usar transações nas operações que alteram estoque e disponibilidade.
 4. Expandir a documentação de exemplos e respostas de erro.
 5. Preparar uma configuração de demonstração com dados fictícios.
+
+## Resultado da revisão técnica
+
+Revisei o projeto comparando o comportamento real da aplicação com o modelo de domínio, o schema Prisma, os testes e a documentação. O projeto está adequado para estudo e demonstração local, mas ainda tem limites que precisam ser conhecidos antes de tratá-lo como uma API de produção:
+
+- O runtime usa `Map` em memória. Os dados desaparecem quando o processo reinicia, mesmo que o schema PostgreSQL já esteja definido.
+- O arquivo `prisma/seed.ts` ainda não usa o Prisma Client. Por isso, o script de seed não cria registros de verdade.
+- A especificação OpenAPI documenta as rotas principais, mas ainda não cobre todos os endpoints de produtos, itens e cancelamento de pedidos.
+- A lógica ainda está concentrada em `src/app.ts`. Para crescer sem ficar difícil de manter, seria melhor separar rotas, validações, serviços e repositórios.
+- A alteração de estoque acontece antes de terminar toda a operação do pedido. Sem uma transação, uma falha inesperada pode deixar o estoque reduzido e o pedido incompleto.
+- O cancelamento do pedido muda o status, mas ainda não devolve ao estoque ou à disponibilidade os itens que já foram reservados.
+- `Event.capacity` existe no modelo, mas ainda não limita automaticamente a soma dos ingressos vendidos.
+- Os valores monetários usam `number` no runtime. Em uma versão persistida, é mais seguro usar `Decimal` do Prisma ou trabalhar com centavos inteiros.
+- As rotas de criação e alteração de eventos, ingressos e produtos ainda não exigem autenticação ou verificam um papel de administrador.
+- O `requestId` é criado, mas ainda não é devolvido no response nem aparece em logs estruturados.
+- Existe um segredo JWT padrão para facilitar o desenvolvimento local. Em produção, a aplicação deveria falhar ao iniciar quando `JWT_SECRET` não estiver configurado.
+- Os testes usam o mesmo store em memória. O ideal é criar um store novo por teste ou limpar explicitamente os dados entre os casos.
+
+Esses pontos não foram escondidos na documentação porque fazem parte do estado atual do projeto. Eles também definem uma ordem razoável para as próximas melhorias.
+
+## Minha experiência com o projeto
+
+Durante a construção, eu aprendi que uma API REST não é apenas uma coleção de rotas CRUD. A rota recebe a requisição, mas a decisão importante precisa ficar em uma regra de negócio que eu consiga explicar. Isso ficou mais claro no pedido: o cliente envia uma referência e uma quantidade, enquanto o servidor consulta o preço, calcula o subtotal e decide se ainda existe estoque ou disponibilidade.
+
+Também precisei entender melhor a diferença entre `401` e `403`. O primeiro caso acontece quando não existe uma identidade válida, como quando o token não foi enviado. O segundo acontece quando o usuário está autenticado, mas tenta acessar um pedido que pertence a outra pessoa. Antes de implementar, eu tendia a tratar os dois casos como “não autorizado”.
+
+As partes que mais exigiram pesquisa foram JWT, hash de senha com bcrypt, validação estrita com Zod, relações no Prisma e o motivo para usar transações ao alterar estoque. Também precisei pesquisar como representar um `OrderItem` que pode apontar para um ingresso ou para um produto. A solução atual mantém `itemType` e `referenceId` no contrato e deixa `ticketId` e `productId` opcionais no schema relacional. Essa solução funciona como modelo inicial, mas ainda precisa de uma regra de integridade para garantir que apenas o campo correspondente ao tipo seja preenchido.
+
+Eu cometi alguns erros durante a implementação. Primeiro, escrevi o schema Prisma com vários campos na mesma linha. O TypeScript não apontou esse problema, mas o Prisma recusou o arquivo. Separei os campos em linhas próprias e validei o schema com `prisma validate`. Depois, usei uma sintaxe de enum que parecia válida para mim, mas também não era aceita pelo parser do Prisma; coloquei cada valor do enum em sua própria linha. Outro problema foi manter um código de teste sem efeito e um comentário mencionando `pnpm`, embora os scripts do projeto usassem `npm`. Removi o trecho sem uso e corrigi a documentação para deixar o procedimento consistente.
+
+O ponto que eu ainda não considero resolvido é a persistência. Manter o store em memória foi uma escolha consciente para conseguir executar e testar o primeiro marco sem depender de um PostgreSQL local, mas isso não substitui uma implementação real com Prisma. A próxima etapa que eu buscaria é criar repositórios, migrar as operações para o banco e testar concorrência com duas compras tentando consumir o mesmo estoque.
+
+Essa revisão também me ajudou a separar “o código compila” de “o sistema está correto”. Os testes e o build passaram, mas eles não provam que há transação, autorização administrativa, restauração de estoque ou persistência. Por isso, esses limites aparecem explicitamente nesta documentação.
 
 ## Referências
 
