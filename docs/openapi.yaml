@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  title: Event Management API
+  version: 1.0.0
+  description: API REST para eventos, ingressos, produtos e pedidos.
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200': { description: Serviço disponível }
+  /api/v1/auth/register:
+    post:
+      summary: Cadastrar usuário
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Register' } } } }
+      responses: { '201': { description: Usuário criado }, '400': { description: Entrada inválida }, '409': { description: E-mail duplicado } }
+  /api/v1/auth/login:
+    post:
+      summary: Autenticar usuário
+      responses: { '200': { description: Token JWT }, '401': { description: Credenciais inválidas } }
+  /api/v1/events:
+    get: { summary: Listar eventos, responses: { '200': { description: Lista de eventos } } }
+    post:
+      summary: Criar evento
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/EventInput' } } } }
+      responses: { '201': { description: Evento criado }, '400': { description: Entrada inválida } }
+  /api/v1/events/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+    get: { summary: Buscar evento, responses: { '200': { description: Evento }, '404': { description: Não encontrado } } }
+    patch: { summary: Atualizar evento, responses: { '200': { description: Atualizado } } }
+    delete: { summary: Cancelar evento, responses: { '204': { description: Cancelado } } }
+  /api/v1/orders:
+    get: { summary: Pedidos do usuário autenticado, security: [{ bearerAuth: [] }], responses: { '200': { description: Lista de pedidos } } }
+    post: { summary: Criar pedido, security: [{ bearerAuth: [] }], responses: { '201': { description: Pedido criado }, '409': { description: Evento cancelado } } }
+  /api/v1/orders/{id}/items:
+    post: { summary: Adicionar item e recalcular total, security: [{ bearerAuth: [] }], responses: { '201': { description: Pedido atualizado }, '409': { description: Estoque/disponibilidade insuficiente } } }
+components:
+  securitySchemes: { bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT } }
+  schemas:
+    EventInput:
+      type: object
+      required: [title, date, location, capacity]
+      properties: { title: { type: string }, description: { type: string }, date: { type: string, format: date-time }, location: { type: string }, capacity: { type: integer, minimum: 1 } }
+    Register:
+      type: object
+      required: [name, email, password]
+      properties: { name: { type: string }, email: { type: string, format: email }, password: { type: string, minLength: 8 } }
