@@ -48,6 +48,13 @@ const ensureEvent = (id: string) => { const event = store.events.get(id); if (!e
 const ensureOrderOwner = (req: AuthRequest, id: string) => { const order = store.orders.get(id); if (!order) throw error(404, 'ORDER_NOT_FOUND', 'Pedido não encontrado'); if (order.userId !== req.userId) throw error(403, 'FORBIDDEN', 'Você não pode acessar este pedido'); return order; };
 const router = express.Router();
 
+router.get('/', (_req, res) => res.json({
+  name: 'event-management-api',
+  message: 'API REST de gerenciamento de eventos',
+  health: '/health',
+  events: '/api/v1/events',
+  openapi: '/docs/openapi.yaml'
+}));
 router.get('/health', (_req, res) => res.json({ status: 'ok', service: 'event-management-api' }));
 router.post('/api/v1/auth/register', (req, res) => { const data = registerSchema.parse(req.body); if ([...store.users.values()].some((u) => u.email === data.email)) throw error(409, 'EMAIL_IN_USE', 'E-mail já cadastrado'); const now = new Date(); const user: User = { id: randomUUID(), name: data.name, email: data.email, passwordHash: bcrypt.hashSync(data.password, 12), createdAt: now, updatedAt: now }; store.users.set(user.id, user); res.status(201).json({ user: publicUser(user), token: signToken(user.id) }); });
 router.post('/api/v1/auth/login', (req, res) => { const data = loginSchema.parse(req.body); const user = [...store.users.values()].find((u) => u.email === data.email); if (!user || !bcrypt.compareSync(data.password, user.passwordHash)) throw error(401, 'INVALID_CREDENTIALS', 'E-mail ou senha inválidos'); res.json({ user: publicUser(user), token: signToken(user.id) }); });
@@ -72,6 +79,7 @@ router.post('/api/v1/orders/:id/cancel', auth, (req: AuthRequest, res) => { cons
 export const app = express();
 app.use(helmet()); app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true })); app.use(express.json({ limit: '100kb' }));
 app.use((req, _res, next) => { const requestId = req.header('x-request-id') ?? randomUUID(); req.headers['x-request-id'] = requestId; next(); });
+app.use('/docs', express.static('docs'));
 app.use(router);
 app.use((_req, _res, next) => next(error(404, 'ROUTE_NOT_FOUND', 'Rota não encontrada')));
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => { if (err instanceof ZodError) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Dados de entrada inválidos', details: err.flatten() } }); if (err instanceof AppError) return res.status(err.status).json({ error: { code: err.code, message: err.message, details: err.details } }); console.error(err); return res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Erro interno inesperado', details: {} } }); });
