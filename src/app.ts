@@ -11,7 +11,7 @@ export type EventStatus = 'ACTIVE' | 'CANCELLED';
 export type OrderStatus = 'PENDING' | 'CANCELLED';
 export type ItemType = 'TICKET' | 'PRODUCT';
 export type User = { id: string; name: string; email: string; passwordHash: string; createdAt: Date; updatedAt: Date };
-export type Event = { id: string; title: string; description?: string; date: Date; location: string; capacity: number; status: EventStatus; createdAt: Date; updatedAt: Date };
+export type Event = { id: string; title: string; description?: string; category: string; date: Date; location: string; capacity: number; status: EventStatus; createdAt: Date; updatedAt: Date };
 export type Ticket = { id: string; eventId: string; name: string; price: number; quantityAvailable: number };
 export type Product = { id: string; eventId: string; name: string; description?: string; price: number; stock: number; active: boolean };
 export type OrderItem = { id: string; orderId: string; itemType: ItemType; referenceId: string; nameSnapshot: string; unitPrice: number; quantity: number; subtotal: number };
@@ -24,7 +24,7 @@ const store = createStore();
 class AppError extends Error { constructor(public status: number, public code: string, message: string, public details: Record<string, unknown> = {}) { super(message); } }
 const error = (status: number, code: string, message: string, details?: Record<string, unknown>) => new AppError(status, code, message, details);
 const idSchema = z.object({ id: z.string().uuid() });
-const eventSchema = z.object({ title: z.string().trim().min(3).max(140), description: z.string().max(2000).optional(), date: z.coerce.date(), location: z.string().trim().min(2).max(200), capacity: z.number().int().positive().max(1_000_000) }).strict();
+const eventSchema = z.object({ title: z.string().trim().min(3).max(140), description: z.string().max(2000).optional(), category: z.string().trim().min(2).max(50).default('Outros'), date: z.coerce.date(), location: z.string().trim().min(2).max(200), capacity: z.number().int().positive().max(1_000_000) }).strict();
 const eventPatchSchema = eventSchema.partial();
 const ticketSchema = z.object({ name: z.string().trim().min(2).max(100), price: z.number().nonnegative().finite(), quantityAvailable: z.number().int().nonnegative() }).strict();
 const productSchema = z.object({ name: z.string().trim().min(2).max(100), description: z.string().max(1000).optional(), price: z.number().nonnegative().finite(), stock: z.number().int().nonnegative(), active: z.boolean().default(true) }).strict();

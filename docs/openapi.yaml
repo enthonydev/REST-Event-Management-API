@@ -42,7 +42,7 @@ components:
     EventInput:
       type: object
       required: [title, date, location, capacity]
-      properties: { title: { type: string }, description: { type: string }, date: { type: string, format: date-time }, location: { type: string }, capacity: { type: integer, minimum: 1 } }
+      properties: { title: { type: string }, description: { type: string }, category: { type: string, example: Música }, date: { type: string, format: date-time }, location: { type: string }, capacity: { type: integer, minimum: 1 } }
     Register:
       type: object
       required: [name, email, password]

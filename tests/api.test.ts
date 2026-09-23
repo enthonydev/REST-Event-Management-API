@@ -11,8 +11,9 @@ describe('Event Management API', () => {
   });
 
   it('creates, lists and cancels an event', async () => {
-    const created = await request(app).post('/api/v1/events').send({ title: 'Festival Demo', date: '2026-10-20T20:00:00Z', location: 'São Paulo', capacity: 500 });
+    const created = await request(app).post('/api/v1/events').send({ title: 'Festival Demo', category: 'Música', date: '2026-10-20T20:00:00Z', location: 'São Paulo', capacity: 500 });
     expect(created.status).toBe(201);
+    expect(created.body.category).toBe('Música');
     const listed = await request(app).get('/api/v1/events');
     expect(listed.body.data.some((event: { id: string }) => event.id === created.body.id)).toBe(true);
     const cancelled = await request(app).delete(`/api/v1/events/${created.body.id}`);

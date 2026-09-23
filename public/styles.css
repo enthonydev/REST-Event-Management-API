@@ -55,6 +55,10 @@ h3 { font-size: 18px; font-weight: 700; }
 .stats article { padding: 16px; }
 .stats span { display: block; color: var(--gray); font-size: 13px; }
 .stats strong { display: block; margin-top: 8px; font-size: 28px; }
+.filters { display: flex; align-items: end; gap: 10px; margin-bottom: 20px; padding: 12px; }
+.filters strong { margin-right: auto; }
+.filters label { display: grid; gap: 4px; color: var(--gray); font-size: 12px; }
+.filters select, .filters input { padding: 8px; border: 1px solid var(--black); border-radius: 0; background: var(--white); }
 
 .intro { background: var(--black); color: var(--white); }
 .intro p { max-width: 650px; margin: 10px 0 18px; color: var(--white); }
@@ -103,6 +107,8 @@ h3 { font-size: 18px; font-weight: 700; }
   .session-card { display: none; }
   .content { padding: 24px 5%; }
   .two-col, .detail-grid, .auth-grid { grid-template-columns: 1fr; }
+  .filters { align-items: stretch; flex-direction: column; }
+  .filters strong { margin-right: 0; }
   .stats { grid-template-columns: 1fr; }
   .section-heading { align-items: flex-start; flex-direction: column; }
   .section-heading button { width: 100%; }

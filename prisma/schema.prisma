@@ -36,6 +36,7 @@ model Event {
   id          String      @id @default(uuid())
   title       String
   description String?
+  category    String      @default("Outros")
   date        DateTime
   location    String
   capacity    Int

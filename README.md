@@ -6,7 +6,7 @@ Uma API REST para organizar eventos, ingressos, produtos e pedidos. O projeto fo
 
 A aplicação permite criar e cancelar eventos, cadastrar tipos de ingresso e produtos associados a cada evento, registrar usuários e criar pedidos autenticados. O valor final do pedido nunca vem pronto do cliente. O servidor consulta os preços atuais, registra o preço usado na compra e calcula os subtotais e o total.
 
-O escopo atual não inclui pagamento, frontend, notificações, QR Code operacional ou integração com serviços externos. Esses itens podem fazer parte de uma evolução futura, mas não são necessários para demonstrar o núcleo da aplicação.
+O escopo atual não inclui pagamento, notificações, QR Code operacional ou integração com serviços externos. O projeto também possui um painel frontend simples em `/ui`, usado para testar a API visualmente. Os eventos têm categoria e podem ser filtrados no painel por categoria e por intervalo de datas.
 
 ## Stack
 
@@ -27,6 +27,11 @@ A aplicação mantém o fluxo HTTP separado das regras de domínio. As rotas rec
 src/
 ├── app.ts       # configuração do Express, rotas e tratamento de erros
 └── server.ts    # inicialização do servidor HTTP
+
+public/
+├── index.html   # painel visual
+├── app.js       # chamadas para a API e filtros
+└── styles.css   # estilo simples do painel
 
 prisma/
 └── schema.prisma
