@@ -200,4 +200,4 @@ router.use((err: unknown, _req: Request, _res: Response, next: NextFunction) => 
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') return next(new ApiError(409, 'CONFLICT', 'Registro já existente'));
   next(err);
 });
-export { router as prismaRouter };
+export { router as prismaRouter, ApiError as PrismaApiError };
