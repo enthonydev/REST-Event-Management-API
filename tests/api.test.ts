@@ -133,4 +133,36 @@ describe('Event Management API', () => {
     expect(item.status).toBe(409);
     expect(item.body.error.message).toBe('Pedido cancelado não recebe itens');
   });
+  it('restores ticket and product inventory when an order is cancelled', async () => {
+    const { token } = await createUser();
+    const event = await createEvent();
+    const ticket = await request(app).post(`/api/v1/events/${event.id}/tickets`).send({ name: 'Inteira', price: 20, quantityAvailable: 3 });
+    const product = await request(app).post(`/api/v1/events/${event.id}/products`).send({ name: 'Camiseta', price: 30, stock: 2 });
+    const order = await request(app).post('/api/v1/orders').set('Authorization', `Bearer ${token}`).send({ eventId: event.id });
+    for (const item of [{ itemType: 'TICKET', referenceId: ticket.body.id, quantity: 2 }, { itemType: 'PRODUCT', referenceId: product.body.id, quantity: 1 }]) {
+      expect((await request(app).post(`/api/v1/orders/${order.body.id}/items`).set('Authorization', `Bearer ${token}`).send(item)).status).toBe(201);
+    }
+    expect((await request(app).post(`/api/v1/orders/${order.body.id}/cancel`).set('Authorization', `Bearer ${token}`)).status).toBe(200);
+    const tickets = await request(app).get(`/api/v1/events/${event.id}/tickets`);
+    const products = await request(app).get(`/api/v1/events/${event.id}/products`);
+    expect(tickets.body.data.find((t: { id: string }) => t.id === ticket.body.id).quantityAvailable).toBe(3);
+    expect(products.body.data.find((p: { id: string }) => p.id === product.body.id).stock).toBe(2);
+    expect((await request(app).post(`/api/v1/orders/${order.body.id}/cancel`).set('Authorization', `Bearer ${token}`)).status).toBe(409);
+    const ticketsAfter = await request(app).get(`/api/v1/events/${event.id}/tickets`);
+    expect(ticketsAfter.body.data.find((t: { id: string }) => t.id === ticket.body.id).quantityAvailable).toBe(3);
+  });
+
+  it('does not add items to existing orders after their event is cancelled', async () => {
+    const { token } = await createUser();
+    const event = await createEvent();
+    const ticket = await request(app).post(`/api/v1/events/${event.id}/tickets`).send({ name: 'Inteira', price: 20, quantityAvailable: 3 });
+    const order = await request(app).post('/api/v1/orders').set('Authorization', `Bearer ${token}`).send({ eventId: event.id });
+    expect((await request(app).delete(`/api/v1/events/${event.id}`)).status).toBe(204);
+    const response = await request(app).post(`/api/v1/orders/${order.body.id}/items`).set('Authorization', `Bearer ${token}`).send({ itemType: 'TICKET', referenceId: ticket.body.id, quantity: 1 });
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe('EVENT_CANCELLED');
+    const tickets = await request(app).get(`/api/v1/events/${event.id}/tickets`);
+    expect(tickets.body.data.find((t: { id: string }) => t.id === ticket.body.id).quantityAvailable).toBe(3);
+  });
+
 });
