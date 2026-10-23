@@ -35,7 +35,14 @@ const orderSchema = z.object({ eventId: z.string().uuid() }).strict();
 const itemSchema = z.object({ itemType: z.enum(['TICKET', 'PRODUCT']), referenceId: z.string().uuid(), quantity: z.number().int().positive().max(1000) }).strict();
 
 type AuthRequest = Request & { userId?: string };
-const jwtSecret = () => process.env.JWT_SECRET ?? 'development-only-secret';
+const jwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (secret && secret.trim()) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET deve ser configurado em produção');
+  }
+  return 'development-only-secret';
+};
 const signToken = (userId: string) => jwt.sign({ sub: userId }, jwtSecret(), { expiresIn: '2h' });
 const auth = (req: AuthRequest, _res: Response, next: NextFunction) => {
   const header = req.header('authorization');
