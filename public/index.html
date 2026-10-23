@@ -35,7 +35,27 @@
           <div id="event-detail" class="panel detail hidden"></div>
         </section>
         <section id="orders" class="view"><div class="section-heading"><div><span class="eyebrow">VENDAS</span><h2>Pedidos</h2></div><button id="refresh-orders" class="secondary">Atualizar</button></div><div id="orders-guest" class="panel empty-state">Faça login para consultar seus pedidos.</div><div id="orders-content" class="hidden"><form id="find-order-form" class="panel inline-form order-search"><label>Buscar pedido pelo ID completo<input name="orderId" required placeholder="Cole o UUID do pedido" /></label><button class="secondary" type="submit">Buscar pedido</button></form><div id="orders-list" class="cards-list" aria-live="polite"></div><div id="order-builder" class="panel hidden"></div></div></section>
-        <section id="auth" class="view"><div class="section-heading"><div><span class="eyebrow">IDENTIDADE</span><h2>Login e cadastro</h2></div></div><div class="two-col auth-grid"><form id="login-form" class="panel form-card"><span class="eyebrow">ENTRAR</span><h3>Já tenho uma conta</h3><label>E-mail<input name="email" type="email" required /></label><label>Senha<input name="password" type="password" required /></label><button class="primary" type="submit">Entrar</button></form><form id="register-form" class="panel form-card"><span class="eyebrow">PRIMEIRO ACESSO</span><h3>Criar conta</h3><label>Nome<input name="name" required minlength="2" /></label><label>E-mail<input name="email" type="email" required /></label><label>Senha<input name="password" type="password" minlength="8" required /></label><button class="secondary" type="submit">Cadastrar</button></form></div></section>
+        <section id="auth" class="view">
+          <div class="section-heading"><div><span class="eyebrow">SUA CONTA</span><h2>Acesse sua conta</h2><p class="section-description">Entre para acompanhar seus pedidos e gerenciar seus eventos.</p></div></div>
+          <div class="auth-shell">
+            <form id="login-form" class="panel form-card auth-form">
+              <span class="eyebrow">BEM-VINDO DE VOLTA</span><h3>Entrar</h3>
+              <label>E-mail<input name="email" type="email" autocomplete="email" required placeholder="seu@email.com" /></label>
+              <label>Senha<input name="password" type="password" autocomplete="current-password" required placeholder="Sua senha" /></label>
+              <button class="primary" type="submit">Entrar na conta</button>
+              <p class="auth-switch">Ainda não tem uma conta? <button type="button" class="text-action" id="show-register">Criar conta</button></p>
+            </form>
+            <form id="register-form" class="panel form-card auth-form hidden">
+              <span class="eyebrow">PRIMEIRO ACESSO</span><h3>Criar sua conta</h3>
+              <label>Nome<input name="name" autocomplete="name" required minlength="2" placeholder="Seu nome" /></label>
+              <label>E-mail<input name="email" type="email" autocomplete="email" required placeholder="seu@email.com" /></label>
+              <label>Senha<input name="password" type="password" autocomplete="new-password" minlength="8" required placeholder="Mínimo de 8 caracteres" /></label>
+              <button class="primary" type="submit">Criar conta</button>
+              <p class="auth-switch">Já possui cadastro? <button type="button" class="text-action" id="show-login">Voltar ao login</button></p>
+            </form>
+            <aside class="auth-aside"><span class="eyebrow">EVENT MANAGEMENT</span><h3>Eventos, ingressos e pedidos em um só lugar.</h3><p>Organize seu catálogo, acompanhe a disponibilidade e gerencie pedidos em uma interface simples.</p><div class="auth-aside-mark" aria-hidden="true">EM<span> / </span>01</div></aside>
+          </div>
+        </section>
       </section>
     </main>
     <footer class="footer">Feito por Enthony Guilherme Silva</footer>
