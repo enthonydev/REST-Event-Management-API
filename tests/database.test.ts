@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import { prisma } from '../src/db.js';
 
@@ -7,7 +8,7 @@ run('PostgreSQL + Prisma integration', () => {
   afterAll(async () => { await prisma.$disconnect(); });
 
   it('persists a user and an event with relational integrity', async () => {
-    const suffix = crypto.randomUUID();
+    const suffix = randomUUID();
     const user = await prisma.user.create({
       data: { name: 'Integration Test', email: `integration-${suffix}@example.com`, passwordHash: 'test-hash' }
     });
