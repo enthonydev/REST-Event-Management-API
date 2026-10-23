@@ -91,6 +91,14 @@ function renderSession() {
   $('#orders-content').classList.toggle('hidden', !state.user);
 }
 
+function setAuthMode(mode) {
+  const registering = mode === 'register';
+  $('#login-form').classList.toggle('hidden', registering);
+  $('#register-form').classList.toggle('hidden', !registering);
+  const heading = $('#auth .section-heading h2');
+  if (heading) heading.textContent = registering ? 'Crie sua conta' : 'Acesse sua conta';
+}
+
 function navigate(section) {
   if (!document.getElementById(section)?.classList.contains('view')) return;
   $$('.view').forEach((view) => view.classList.toggle('active-view', view.id === section));
@@ -325,7 +333,7 @@ $('#event-form').addEventListener('submit', async (event) => {
   await withSubmitting(form, async () => {
   try {
     await api('/api/v1/events', { method: 'POST', body: JSON.stringify({ title: data.title, category: data.category, date: new Date(data.date).toISOString(), location: data.location, capacity: Number(data.capacity), description: data.description || undefined }) });
-    event.currentTarget.reset();
+    form.reset();
     showMessage('Evento criado.');
     await loadEvents();
   } catch (error) {
@@ -360,6 +368,8 @@ $('#register-form').addEventListener('submit', async (event) => {
   }
 });
 
+$('#show-register').addEventListener('click', () => setAuthMode('register'));
+$('#show-login').addEventListener('click', () => setAuthMode('login'));
 $('#logout-button').addEventListener('click', () => { clearSession(); showMessage('Sessão encerrada.'); });
 $('#refresh-events').addEventListener('click', loadEvents);
 $('#refresh-orders').addEventListener('click', loadOrders);
