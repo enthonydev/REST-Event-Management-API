@@ -187,6 +187,14 @@ DATABASE_INTEGRATION_TEST=1 npm test
 
 **Estado atual:** o contrato relacional, as migrations e a integração de teste usam PostgreSQL, mas as rotas HTTP continuam usando o store em memória. A migração do runtime, as transações de estoque e os testes de concorrência são etapas seguintes. Não use a API atual como sistema persistente de produção.
 
+## Rotas persistentes e transações de estoque
+
+Com PostgreSQL configurado, execute `npx prisma migrate deploy` e use `PERSISTENCE_MODE=prisma` no arquivo `.env`. O modo Prisma grava usuários, eventos, ingressos, produtos, pedidos e itens no banco. Em produção, as rotas persistentes são habilitadas automaticamente.
+
+A inclusão de itens e o cancelamento de pedidos usam transações serializáveis. As baixas de estoque são condicionais à quantidade disponível, e o cancelamento devolve as unidades uma única vez. O CI executa a suíte HTTP com PostgreSQL e um teste de duas compras concorrentes disputando o último ingresso.
+
+O modo em memória permanece disponível apenas para desenvolvimento local sem `PERSISTENCE_MODE=prisma`. Para uso persistente, configure `DATABASE_URL`, `JWT_SECRET` e aplique as migrations antes de iniciar o servidor.
+
 ## Próximos passos
 
 1. Substituir o store em memória por repositórios Prisma.
