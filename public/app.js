@@ -47,6 +47,21 @@ const showMessage = (message, isError = false) => {
   showMessage.timer = setTimeout(() => box.classList.add('hidden'), 5000);
 };
 
+
+// Mantém o botão de envio indisponível somente durante a requisição.
+async function withSubmitting(form, operation) {
+  if (form.dataset.busy === 'true') return;
+  const button = form.querySelector('button[type="submit"]');
+  const originalText = button?.textContent;
+  form.dataset.busy = 'true';
+  if (button) { button.disabled = true; button.textContent = 'Aguarde...'; }
+  try { await operation(); }
+  finally {
+    form.dataset.busy = 'false';
+    if (button?.isConnected) { button.disabled = false; button.textContent = originalText; }
+  }
+}
+
 const money = (value) => `R$ ${Number(value).toFixed(2).replace('.', ',')}`;
 const date = (value) => new Date(value).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
@@ -158,6 +173,7 @@ async function createTicket(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const data = Object.fromEntries(new FormData(form));
+  await withSubmitting(form, async () => {
   try {
     await api(`/api/v1/events/${state.selectedEvent.id}/tickets`, { method: 'POST', body: JSON.stringify({ name: data.name, price: Number(data.price), quantityAvailable: Number(data.quantityAvailable) }) });
     form.reset();
@@ -166,6 +182,7 @@ async function createTicket(event) {
   } catch (error) {
     showMessage(error.message, true);
   }
+  });
 }
 
 async function createProduct(event) {
