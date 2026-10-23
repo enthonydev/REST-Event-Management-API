@@ -24,6 +24,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/event_management_test?schema=public
       DATABASE_INTEGRATION_TEST: '1'
+      PERSISTENCE_MODE: prisma
       JWT_SECRET: ci-only-secret-not-for-production
     steps:
       - uses: actions/checkout@v4
