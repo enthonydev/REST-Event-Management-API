@@ -118,7 +118,7 @@ function filteredEvents() {
 async function loadHealth() {
   try {
     await api('/health');
-    $('#api-status').textContent = 'API online';
+    $('#api-status').textContent = window.__EVENT_PREVIEW__ ? 'Modo demonstração' : 'API online';
     $('.status-dot').classList.add('online');
   } catch {
     $('#api-status').textContent = 'API offline';
