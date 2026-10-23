@@ -9,7 +9,7 @@ type AuthRequest = Request & { userId?: string };
 class ApiError extends Error {
   constructor(public status: number, public code: string, message: string) { super(message); }
 }
-const fail = (status: number, code: string, message: string): never => { throw new ApiError(status, code, message); };
+function fail(status: number, code: string, message: string): never { throw new ApiError(status, code, message); }
 const id = z.object({ id: z.string().uuid() });
 const eventInput = z.object({
   title: z.string().trim().min(3).max(140),
