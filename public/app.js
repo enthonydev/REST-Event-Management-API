@@ -41,6 +41,7 @@ const showMessage = (message, isError = false) => {
   const box = $('#flash');
   box.textContent = message;
   box.classList.toggle('error', isError);
+  box.setAttribute('role', isError ? 'alert' : 'status');
   box.classList.remove('hidden');
   clearTimeout(showMessage.timer);
   showMessage.timer = setTimeout(() => box.classList.add('hidden'), 5000);
@@ -76,8 +77,9 @@ function renderSession() {
 }
 
 function navigate(section) {
+  if (!document.getElementById(section)?.classList.contains('view')) return;
   $$('.view').forEach((view) => view.classList.toggle('active-view', view.id === section));
-  $$('.nav-button').forEach((button) => button.classList.toggle('active', button.dataset.section === section));
+  $('.nav-button').forEach((button) => { const active = button.dataset.section === section; button.classList.toggle('active', active); if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); });
   if (section === 'events') loadEvents();
   if (section === 'orders' && state.user) loadOrders();
 }
@@ -124,7 +126,7 @@ function renderEvents() {
   const list = $('#events-list');
   const events = filteredEvents();
   if (!events.length) {
-    list.innerHTML = '<div class="empty-state">Nenhum evento encontrado com esses filtros.</div>';
+    list.innerHTML = Object.values(state.filters).some(Boolean) ? '<div class="empty-state">Nenhum evento corresponde aos filtros selecionados.</div>' : '<div class="empty-state">Ainda não há eventos cadastrados.</div>';
     return;
   }
   list.innerHTML = events.map((event) => `<article class="card"><div class="card-top"><div><h3>${escapeHtml(event.title)}</h3><p>${escapeHtml(event.category)} · ${escapeHtml(event.location)} · ${date(event.date)}</p></div><span class="badge ${event.status === 'CANCELLED' ? 'cancelled' : ''}">${event.status === 'ACTIVE' ? 'Ativo' : 'Cancelado'}</span></div><p>${escapeHtml(event.description || 'Sem descrição')} · capacidade: ${event.capacity}</p><div class="card-actions"><button class="small-button" data-open-event="${event.id}">Ver detalhes</button>${event.status === 'ACTIVE' ? `<button class="small-button danger" data-cancel-event="${event.id}">Cancelar</button>` : ''}</div></article>`).join('');
@@ -147,8 +149,8 @@ function renderEventDetail(event, tickets, products) {
   const orderButton = state.user && event.status === 'ACTIVE' ? `<button class="primary" id="create-order" data-event-id="${event.id}">Criar pedido para este evento</button>` : '';
   $('#event-detail').classList.remove('hidden');
   $('#event-detail').innerHTML = `<div class="card-top"><div><span class="eyebrow">DETALHES DO EVENTO</span><h3>${escapeHtml(event.title)}</h3><p>${escapeHtml(event.category)} · ${escapeHtml(event.location)} · ${date(event.date)} · capacidade ${event.capacity}</p></div>${orderButton}</div><div class="detail-grid"><div class="detail-column"><h4>Ingressos</h4><form id="ticket-form" class="inline-form"><input name="name" required placeholder="Nome" /><input name="price" required type="number" min="0" step="0.01" placeholder="Preço" /><input name="quantityAvailable" required type="number" min="0" placeholder="Qtd." /><button class="small-button" type="submit">Adicionar</button></form><div>${tickets.length ? tickets.map((ticket) => `<div class="item-row"><span>${escapeHtml(ticket.name)} · ${money(ticket.price)}<small>ID: ${escapeHtml(ticket.id)}</small></span><strong>${ticket.quantityAvailable} disponíveis</strong></div>`).join('') : '<p>Nenhum ingresso cadastrado.</p>'}</div></div><div class="detail-column"><h4>Produtos</h4><form id="product-form" class="inline-form"><input name="name" required placeholder="Nome" /><input name="price" required type="number" min="0" step="0.01" placeholder="Preço" /><input name="stock" required type="number" min="0" placeholder="Estoque" /><button class="small-button" type="submit">Adicionar</button></form><div>${products.length ? products.map((product) => `<div class="item-row"><span>${escapeHtml(product.name)} · ${money(product.price)}<small>ID: ${escapeHtml(product.id)}</small></span><strong>${product.stock} em estoque</strong></div>`).join('') : '<p>Nenhum produto cadastrado.</p>'}</div></div></div>`;
-  $('#ticket-form').addEventListener('submit', createTicket);
-  $('#product-form').addEventListener('submit', createProduct);
+  $('#ticket-form')?.addEventListener('submit', createTicket);
+  $('#product-form')?.addEventListener('submit', createProduct);
   $('#create-order')?.addEventListener('click', () => createOrder(event.id));
 }
 
@@ -225,13 +227,13 @@ function renderOrderBuilder() {
   const ticketOptions = state.orderCatalog.tickets.map((ticket) => `<option value="${ticket.id}">${escapeHtml(ticket.name)} — ${money(ticket.price)} (${ticket.quantityAvailable} disponíveis)</option>`).join('');
   const productOptions = state.orderCatalog.products.map((product) => `<option value="${product.id}">${escapeHtml(product.name)} — ${money(product.price)} (${product.stock} em estoque)</option>`).join('');
   $('#order-builder').classList.remove('hidden');
-  $('#order-builder').innerHTML = `<div class="card-top"><div><span class="eyebrow">PEDIDO ABERTO</span><h3>Pedido ${shortId(order.id)}</h3><p>Status: ${order.status} · total: <strong>${money(order.total)}</strong></p></div><button class="small-button danger" id="cancel-order">Cancelar pedido</button></div>${orderHeader(order)}<form id="item-form" class="inline-form" style="margin-top:16px"><label>Tipo<select name="itemType"><option value="TICKET">Ingresso</option><option value="PRODUCT">Produto</option></select></label><label>Item<select name="referenceId" required><option value="">Selecione um item</option>${ticketOptions}</select></label><label>Quantidade<input name="quantity" required type="number" min="1" value="1" /></label><button class="primary" type="submit">Adicionar item</button></form><div>${order.items.length ? order.items.map((item) => `<div class="item-row"><span>${escapeHtml(item.nameSnapshot)} x ${item.quantity}</span><strong>${money(item.subtotal)}</strong></div>`).join('') : '<p style="margin-top:14px">Nenhum item ainda.</p>'}</div>`;
-  $('#item-form').addEventListener('submit', addOrderItem);
-  $('#item-form [name="itemType"]').addEventListener('change', (event) => {
+  $('#order-builder').innerHTML = `<div class="card-top"><div><span class="eyebrow">PEDIDO ABERTO</span><h3>Pedido ${shortId(order.id)}</h3><p>Status: ${order.status} · total: <strong>${money(order.total)}</strong></p></div><button class="small-button danger" id="cancel-order" ${order.status === "CANCELLED" ? "hidden" : ""}>Cancelar pedido</button></div>${orderHeader(order)}<form id="item-form" class="inline-form" style="margin-top:16px" ${order.status === "CANCELLED" ? "hidden" : ""}><label>Tipo<select name="itemType"><option value="TICKET">Ingresso</option><option value="PRODUCT">Produto</option></select></label><label>Item<select name="referenceId" required><option value="">Selecione um item</option>${ticketOptions}</select></label><label>Quantidade<input name="quantity" required type="number" min="1" value="1" /></label><button class="primary" type="submit">Adicionar item</button></form><div>${order.items.length ? order.items.map((item) => `<div class="item-row"><span>${escapeHtml(item.nameSnapshot)} x ${item.quantity}</span><strong>${money(item.subtotal)}</strong></div>`).join('') : '<p style="margin-top:14px">Nenhum item ainda.</p>'}</div>`;
+  $('#item-form')?.addEventListener('submit', addOrderItem);
+  $('#item-form [name="itemType"]')?.addEventListener('change', (event) => {
     const select = $('#item-form [name="referenceId"]');
     select.innerHTML = `<option value="">Selecione um item</option>${event.target.value === 'TICKET' ? ticketOptions : productOptions}`;
   });
-  $('#cancel-order').addEventListener('click', cancelCurrentOrder);
+  $('#cancel-order')?.addEventListener('click', cancelCurrentOrder);
 }
 
 async function addOrderItem(event) {
@@ -249,6 +251,7 @@ async function addOrderItem(event) {
 }
 
 async function cancelCurrentOrder() {
+  if (!confirm('Cancelar este pedido? Os itens serão devolvidos ao estoque.')) return;
   try {
     state.currentOrder = await api(`/api/v1/orders/${state.currentOrder.id}/cancel`, { method: 'POST' });
     showMessage('Pedido cancelado.');
@@ -359,7 +362,7 @@ document.addEventListener('click', (event) => {
 });
 
 async function cancelEvent(id) {
-  if (!confirm('Cancelar este evento?')) return;
+  if (!confirm('Cancelar este evento? Ele deixará de aceitar novos pedidos.')) return;
   try {
     await api(`/api/v1/events/${id}`, { method: 'DELETE' });
     showMessage('Evento cancelado.');
