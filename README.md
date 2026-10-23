@@ -172,6 +172,21 @@ O painel visual fica em `http://localhost:3000/ui/`. Nele é possível criar eve
 
 O contrato OpenAPI está em [`docs/openapi.yaml`](docs/openapi.yaml). Ele serve como referência para os endpoints, parâmetros, autenticação e respostas previstas.
 
+## Fundação PostgreSQL e Prisma
+
+O repositório inclui uma migration SQL inicial em `prisma/migrations/`, um cliente compartilhado em `src/db.ts` e um teste de integração que cria e consulta registros reais no PostgreSQL. O CI sobe PostgreSQL 16, executa `prisma migrate deploy` e roda esse teste.
+
+Para executar a integração localmente, configure `DATABASE_URL` apontando para um PostgreSQL de testes e execute:
+
+```bash
+npm ci
+npm run db:generate
+npx prisma migrate deploy
+DATABASE_INTEGRATION_TEST=1 npm test
+```
+
+**Estado atual:** o contrato relacional, as migrations e a integração de teste usam PostgreSQL, mas as rotas HTTP continuam usando o store em memória. A migração do runtime, as transações de estoque e os testes de concorrência são etapas seguintes. Não use a API atual como sistema persistente de produção.
+
 ## Próximos passos
 
 1. Substituir o store em memória por repositórios Prisma.
