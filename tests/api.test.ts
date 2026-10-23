@@ -165,4 +165,21 @@ describe('Event Management API', () => {
     expect(tickets.body.data.find((t: { id: string }) => t.id === ticket.body.id).quantityAvailable).toBe(3);
   });
 
+  it('impede venda acima do estoque em requisições simultâneas no PostgreSQL', async () => {
+    if (process.env.PERSISTENCE_MODE !== 'prisma') return;
+    const { token } = await createUser();
+    const event = await createEvent();
+    const ticket = await request(app).post(`/api/v1/events/${event.id}/tickets`).send({ name: 'Último ingresso', price: 15, quantityAvailable: 1 });
+    const orderA = await request(app).post('/api/v1/orders').set('Authorization', `Bearer ${token}`).send({ eventId: event.id });
+    const orderB = await request(app).post('/api/v1/orders').set('Authorization', `Bearer ${token}`).send({ eventId: event.id });
+    const responses = await Promise.all([orderA.body.id, orderB.body.id].map(orderId =>
+      request(app).post(`/api/v1/orders/${orderId}/items`).set('Authorization', `Bearer ${token}`)
+        .send({ itemType: 'TICKET', referenceId: ticket.body.id, quantity: 1 })
+    ));
+    expect(responses.filter(response => response.status === 201)).toHaveLength(1);
+    expect(responses.filter(response => response.status === 409)).toHaveLength(1);
+    const tickets = await request(app).get(`/api/v1/events/${event.id}/tickets`);
+    expect(tickets.body.data.find((entry: { id: string }) => entry.id === ticket.body.id).quantityAvailable).toBe(0);
+  });
+
 });
