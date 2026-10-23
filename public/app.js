@@ -255,7 +255,8 @@ function renderOrderBuilder() {
 
 async function addOrderItem(event) {
   event.preventDefault();
-  const data = Object.fromEntries(new FormData(event.currentTarget));
+  const form = event.currentTarget;
+  const data = Object.fromEntries(new FormData(form));
   if (!data.referenceId) return showMessage('Selecione um ingresso ou produto antes de adicionar.', true);
   try {
     state.currentOrder = await api(`/api/v1/orders/${state.currentOrder.id}/items`, { method: 'POST', body: JSON.stringify({ itemType: data.itemType, referenceId: data.referenceId, quantity: Number(data.quantity) }) });
@@ -319,7 +320,9 @@ async function copyOrderId(id) {
 
 $('#event-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  const data = Object.fromEntries(new FormData(event.currentTarget));
+  const form = event.currentTarget;
+  const data = Object.fromEntries(new FormData(form));
+  await withSubmitting(form, async () => {
   try {
     await api('/api/v1/events', { method: 'POST', body: JSON.stringify({ title: data.title, category: data.category, date: new Date(data.date).toISOString(), location: data.location, capacity: Number(data.capacity), description: data.description || undefined }) });
     event.currentTarget.reset();
@@ -328,6 +331,7 @@ $('#event-form').addEventListener('submit', async (event) => {
   } catch (error) {
     showMessage(error.message, true);
   }
+  });
 });
 
 $('#login-form').addEventListener('submit', async (event) => {
