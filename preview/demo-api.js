@@ -1,3 +1,4 @@
+window.__EVENT_PREVIEW__ = true;
 // Demonstração isolada no navegador: nenhum dado é enviado a um servidor.
 const key = 'event-api-preview-v1';
 const uuid = () => crypto.randomUUID();
