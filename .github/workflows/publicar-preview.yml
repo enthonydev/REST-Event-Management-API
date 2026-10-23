@@ -1,0 +1,43 @@
+name: Publicar prévia da interface
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar arquivos estáticos da demonstração
+        run: |
+          mkdir -p _site
+          cp public/styles.css public/app.js _site/
+          cp preview/demo-api.js _site/
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path('public/index.html').read_text()
+          html = html.replace('/ui/styles.css', './styles.css')
+          html = html.replace('/ui/app.js', './app.js')
+          html = html.replace('<script src="./app.js" type="module"></script>', '<script src="./demo-api.js"></script><script src="./app.js" type="module"></script>')
+          html = html.replace('Painel simples para testar os recursos da API.', 'Prévia interativa da interface. Dados fictícios salvos somente neste navegador.')
+          html = html.replace('<span id="api-status">Verificando API...</span>', '<span id="api-status">Modo demonstração</span>')
+          html = html.replace('<title>Event Management API — Painel</title>', '<title>Event Management API — Demonstração</title>')
+          Path('_site/index.html').write_text(html)
+          PY
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
