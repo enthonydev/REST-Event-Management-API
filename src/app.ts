@@ -93,7 +93,7 @@ app.use(helmet()); app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ??
 app.use((req, _res, next) => { const requestId = req.header('x-request-id') ?? randomUUID(); req.headers['x-request-id'] = requestId; next(); });
 app.use('/ui', express.static('public'));
 app.use('/docs', express.static('docs'));
-if (process.env.PERSISTENCE_MODE === 'prisma') app.use(prismaRouter);
+if (process.env.PERSISTENCE_MODE === 'prisma' || process.env.NODE_ENV === 'production') app.use(prismaRouter);
 app.use(router);
 app.use((_req, _res, next) => next(error(404, 'ROUTE_NOT_FOUND', 'Rota não encontrada')));
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => { if (err instanceof ZodError) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Dados de entrada inválidos', details: err.flatten() } }); if (err instanceof PrismaApiError || err instanceof AppError) return res.status(err.status).json({ error: { code: err.code, message: err.message, details: err.details } }); console.error(err); return res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Erro interno inesperado', details: {} } }); });
