@@ -35,7 +35,14 @@ const orderSchema = z.object({ eventId: z.string().uuid() }).strict();
 const itemSchema = z.object({ itemType: z.enum(['TICKET', 'PRODUCT']), referenceId: z.string().uuid(), quantity: z.number().int().positive().max(1000) }).strict();
 
 type AuthRequest = Request & { userId?: string };
-const jwtSecret = () => process.env.JWT_SECRET ?? 'development-only-secret';
+const jwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (secret && secret.trim()) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET deve ser configurado em produção');
+  }
+  return 'development-only-secret';
+};
 const signToken = (userId: string) => jwt.sign({ sub: userId }, jwtSecret(), { expiresIn: '2h' });
 const auth = (req: AuthRequest, _res: Response, next: NextFunction) => {
   const header = req.header('authorization');
@@ -76,6 +83,9 @@ router.get('/api/v1/orders', auth, (req: AuthRequest, res) => res.json({ data: [
 router.get('/api/v1/orders/:id', auth, (req: AuthRequest, res) => res.json(publicOrder(ensureOrderOwner(req, idSchema.parse(req.params).id))));
 router.post('/api/v1/orders/:id/items', auth, (req: AuthRequest, res) => { const order = ensureOrderOwner(req, idSchema.parse(req.params).id); if (order.status === 'CANCELLED') throw error(409, 'ORDER_CANCELLED', 'Pedido cancelado não recebe itens'); const data = itemSchema.parse(req.body); const event = ensureEvent(order.eventId); let name: string; let unitPrice: number; if (data.itemType === 'TICKET') { const ticket = store.tickets.get(data.referenceId); if (!ticket || ticket.eventId !== event.id) throw error(404, 'TICKET_NOT_FOUND', 'Ingresso não encontrado para este evento'); if (ticket.quantityAvailable < data.quantity) throw error(409, 'INSUFFICIENT_AVAILABILITY', 'Disponibilidade de ingresso insuficiente'); ticket.quantityAvailable -= data.quantity; name = ticket.name; unitPrice = ticket.price; } else { const product = store.products.get(data.referenceId); if (!product || product.eventId !== event.id) throw error(404, 'PRODUCT_NOT_FOUND', 'Produto não encontrado para este evento'); if (!product.active) throw error(409, 'PRODUCT_INACTIVE', 'Produto inativo não pode ser vendido'); if (product.stock < data.quantity) throw error(409, 'INSUFFICIENT_STOCK', 'Estoque insuficiente'); product.stock -= data.quantity; name = product.name; unitPrice = product.price; } const item: OrderItem = { id: randomUUID(), orderId: order.id, itemType: data.itemType, referenceId: data.referenceId, nameSnapshot: name, unitPrice, quantity: data.quantity, subtotal: Number((unitPrice * data.quantity).toFixed(2)) }; order.items.push(item); order.total = Number(order.items.reduce((sum, i) => sum + i.subtotal, 0).toFixed(2)); order.updatedAt = new Date(); res.status(201).json(publicOrder(order)); });
 router.post('/api/v1/orders/:id/cancel', auth, (req: AuthRequest, res) => { const order = ensureOrderOwner(req, idSchema.parse(req.params).id); if (order.status === 'CANCELLED') throw error(409, 'ORDER_ALREADY_CANCELLED', 'Pedido já está cancelado'); order.status = 'CANCELLED'; order.updatedAt = new Date(); res.json(publicOrder(order)); });
+
+// Fail fast at startup rather than accepting authentication with a known secret.
+if (process.env.NODE_ENV === 'production') jwtSecret();
 
 export const app = express();
 app.use(helmet()); app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true })); app.use(express.json({ limit: '100kb' }));
